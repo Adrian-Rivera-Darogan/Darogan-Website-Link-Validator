@@ -53,23 +53,6 @@
             align-items: center;
         }
 
-        .setup-info {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .setup-info code {
-            background: #fff;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-            font-weight: 600;
-        }
-
         button {
             background: #667eea;
             color: white;
@@ -100,11 +83,6 @@
             font-size: 13px;
             font-weight: 600;
             display: inline-block;
-        }
-
-        .status-idle {
-            background: #e3f2fd;
-            color: #1976d2;
         }
 
         .status-scanning {
@@ -258,13 +236,6 @@
             color: #999;
         }
 
-        .link-status-text {
-            font-size: 12px;
-            font-weight: 600;
-            color: #666;
-            white-space: nowrap;
-        }
-
         .empty-state {
             padding: 40px 20px;
             text-align: center;
@@ -327,18 +298,6 @@
             <p class="subtitle">Scan darogan.wales for broken links and outdated domain references</p>
         </header>
 
-        <div class="setup-info" id="setupInfo">
-            <strong>⚙️ Setup Required:</strong> This tool needs a Node.js server to bypass browser CORS restrictions.
-            <br><br>
-            <strong>To run the server:</strong>
-            <ol style="margin-left: 20px; margin-top: 10px;">
-                <li>Open terminal in this folder</li>
-                <li>Run: <code>node link-checker-server.js</code></li>
-                <li>Server will start on <code>http://localhost:3000</code></li>
-                <li>Then refresh this page</li>
-            </ol>
-        </div>
-
         <div class="control-panel">
             <button id="scanBtn" onclick="startScan()" disabled>Start Scan</button>
             <button id="exportBtn" class="export-btn" onclick="exportResults()" disabled>Export CSV</button>
@@ -387,8 +346,8 @@
     <script>
         let allLinks = [];
         let currentFilter = 'all';
-        // Update this to your Cloudflare Worker URL (e.g., https://darogan-checker.USERNAME.workers.dev)
-        const SERVER_URL = 'https://darogan-link-checker.adrian-rivera.workers.dev/';
+        // Cloudflare Worker URL
+        const SERVER_URL = 'https://darogan-link-checker.adrian-rivera.workers.dev';
 
         // Check if server is online
         async function checkServerStatus() {
@@ -397,7 +356,7 @@
                     method: 'GET',
                     mode: 'cors'
                 });
-                return true;
+                return response.ok;
             } catch (error) {
                 return false;
             }
@@ -408,18 +367,15 @@
             const isOnline = await checkServerStatus();
             const serverStatusEl = document.getElementById('serverStatus');
             const scanBtn = document.getElementById('scanBtn');
-            const setupInfo = document.getElementById('setupInfo');
 
             if (isOnline) {
                 serverStatusEl.textContent = '✓ Server Online';
                 serverStatusEl.className = 'server-status server-online';
                 scanBtn.disabled = false;
-                setupInfo.style.display = 'none';
             } else {
                 serverStatusEl.textContent = '✗ Server Offline';
                 serverStatusEl.className = 'server-status server-offline';
                 scanBtn.disabled = true;
-                setupInfo.style.display = 'block';
             }
         }
 
@@ -469,7 +425,7 @@
                 statusBadge.textContent = 'Scan failed: ' + error.message;
                 statusBadge.className = 'status-badge status-error';
                 console.error('Scan error:', error);
-                alert('Scan failed: ' + error.message + '\n\nMake sure the server is running: node link-checker-server.js');
+                alert('Scan failed: ' + error.message + '\n\nMake sure your Cloudflare Worker is deployed at: ' + SERVER_URL);
             } finally {
                 scanBtn.disabled = false;
             }
