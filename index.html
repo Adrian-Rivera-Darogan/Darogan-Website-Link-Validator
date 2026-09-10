@@ -328,10 +328,6 @@
                 <div class="stat-label">⚠ Old Domain</div>
                 <div class="stat-number stat-warning" id="oldDomainLinks">0</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">⏭ Skipped (Slow)</div>
-                <div class="stat-number stat-neutral" id="skippedLinks">0</div>
-            </div>
         </div>
 
         <div class="links-container">
@@ -340,7 +336,6 @@
                 <button class="tab" onclick="filterLinks('ok')">✓ Valid</button>
                 <button class="tab" onclick="filterLinks('error')">✗ Broken</button>
                 <button class="tab" onclick="filterLinks('warning')">⚠ Old Domain</button>
-                <button class="tab" onclick="filterLinks('skipped')">⏭ Skipped</button>
             </div>
             <div class="links-list" id="linksList">
                 <div class="empty-state">No links scanned yet. Click "Start Scan" to begin.</div>
@@ -441,13 +436,11 @@
             const valid = allLinks.filter(l => l.status === 'ok').length;
             const broken = allLinks.filter(l => l.status === 'error').length;
             const oldDomain = allLinks.filter(l => l.isOldDomain).length;
-            const skipped = allLinks.filter(l => l.status === 'skipped').length;
 
             document.getElementById('totalLinks').textContent = total;
             document.getElementById('validLinks').textContent = valid;
             document.getElementById('brokenLinks').textContent = broken;
             document.getElementById('oldDomainLinks').textContent = oldDomain;
-            document.getElementById('skippedLinks').textContent = skipped;
         }
 
         function renderLinks() {
@@ -460,8 +453,6 @@
                 filtered = allLinks.filter(l => l.status === 'error');
             } else if (currentFilter === 'warning') {
                 filtered = allLinks.filter(l => l.isOldDomain);
-            } else if (currentFilter === 'skipped') {
-                filtered = allLinks.filter(l => l.status === 'skipped');
             }
 
             if (filtered.length === 0) {
@@ -470,20 +461,10 @@
             }
 
             listContainer.innerHTML = filtered.map(link => {
-                let iconClass, icon;
-                if (link.status === 'ok') {
-                    iconClass = 'status-ok-icon';
-                    icon = '✓';
-                } else if (link.status === 'skipped') {
-                    iconClass = 'status-warning-icon';
-                    icon = '⏭';
-                } else if (link.isOldDomain) {
-                    iconClass = 'status-warning-icon';
-                    icon = '⚠';
-                } else {
-                    iconClass = 'status-error-icon';
-                    icon = '✗';
-                }
+                const iconClass = link.status === 'ok' ? 'status-ok-icon' : 
+                                 link.isOldDomain ? 'status-warning-icon' : 'status-error-icon';
+                const icon = link.status === 'ok' ? '✓' : 
+                            link.isOldDomain ? '⚠' : '✗';
 
                 return `
                     <div class="link-item">
