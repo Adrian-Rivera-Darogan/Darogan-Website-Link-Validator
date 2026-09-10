@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darogan Link Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .setup-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .setup-info code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: 600;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-idle {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-scanning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-complete {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-ok { color: #388e3c; }
+        .stat-error { color: #d32f2f; }
+        .stat-warning { color: #f57c00; }
+        .stat-neutral { color: #666; }
+
+        .links-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .links-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .link-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s ease;
+        }
+
+        .link-item:hover {
+            background: #f5f5f5;
+        }
+
+        .link-status-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-ok-icon {
+            background: #4caf50;
+        }
+
+        .status-error-icon {
+            background: #f44336;
+        }
+
+        .status-warning-icon {
+            background: #ff9800;
+        }
+
+        .link-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .link-url {
+            font-size: 13px;
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .link-url:hover {
+            text-decoration: underline;
+        }
+
+        .link-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .link-status-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            margin: 10px 0 0 0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s ease;
+        }
+
+        .export-btn {
+            background: #764ba2;
+        }
+
+        .export-btn:hover:not(:disabled) {
+            background: #6a3f92;
+        }
+
+        .duration {
+            color: #999;
+            font-size: 13px;
+            margin-left: 10px;
+        }
+
+        .server-status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: auto;
+        }
+
+        .server-online {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .server-offline {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 Darogan Link Checker</h1>
+            <p class="subtitle">Scan darogan.wales for broken links and outdated domain references</p>
+        </header>
+
+        <div class="setup-info" id="setupInfo">
+            <strong>⚙️ Setup Required:</strong> This tool needs a Node.js server to bypass browser CORS restrictions.
+            <br><br>
+            <strong>To run the server:</strong>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li>Open terminal in this folder</li>
+                <li>Run: <code>node link-checker-server.js</code></li>
+                <li>Server will start on <code>http://localhost:3000</code></li>
+                <li>Then refresh this page</li>
+            </ol>
+        </div>
+
+        <div class="control-panel">
+            <button id="scanBtn" onclick="startScan()" disabled>Start Scan</button>
+            <button id="exportBtn" class="export-btn" onclick="exportResults()" disabled>Export CSV</button>
+            <div class="status-badge" id="statusBadge">Connecting to server...</div>
+            <div class="server-status" id="serverStatus">Checking...</div>
+            <div id="progressContainer" style="display: none; flex: 1; min-width: 200px;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="duration" id="duration"></div>
+            </div>
+        </div>
+
+        <div class="results-grid" id="resultsGrid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-label">Total Links</div>
+                <div class="stat-number stat-neutral" id="totalLinks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">✓ Valid</div>
+                <div class="stat-number stat-ok" id="validLinks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">✗ Broken (4xx/5xx)</div>
+                <div class="stat-number stat-error" id="brokenLinks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⚠ Old Domain</div>
+                <div class="stat-number stat-warning" id="oldDomainLinks">0</div>
+            </div>
+        </div>
+
+        <div class="links-container">
+            <div class="filter-tabs">
+                <button class="tab active" onclick="filterLinks('all')">All Links</button>
+                <button class="tab" onclick="filterLinks('ok')">✓ Valid</button>
+                <button class="tab" onclick="filterLinks('error')">✗ Broken</button>
+                <button class="tab" onclick="filterLinks('warning')">⚠ Old Domain</button>
+            </div>
+            <div class="links-list" id="linksList">
+                <div class="empty-state">No links scanned yet. Click "Start Scan" to begin.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLinks = [];
+        let currentFilter = 'all';
+        // Update this to your Cloudflare Worker URL (e.g., https://darogan-checker.USERNAME.workers.dev)
+        const SERVER_URL = 'https://darogan-link-checker.adrian-rivera.workers.dev/';
+
+        // Check if server is online
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(SERVER_URL + '/api/scan?test=true', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Initialize
+        async function init() {
+            const isOnline = await checkServerStatus();
+            const serverStatusEl = document.getElementById('serverStatus');
+            const scanBtn = document.getElementById('scanBtn');
+            const setupInfo = document.getElementById('setupInfo');
+
+            if (isOnline) {
+                serverStatusEl.textContent = '✓ Server Online';
+                serverStatusEl.className = 'server-status server-online';
+                scanBtn.disabled = false;
+                setupInfo.style.display = 'none';
+            } else {
+                serverStatusEl.textContent = '✗ Server Offline';
+                serverStatusEl.className = 'server-status server-offline';
+                scanBtn.disabled = true;
+                setupInfo.style.display = 'block';
+            }
+        }
+
+        async function startScan() {
+            const scanBtn = document.getElementById('scanBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const statusBadge = document.getElementById('statusBadge');
+            const resultsGrid = document.getElementById('resultsGrid');
+            
+            scanBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            resultsGrid.style.display = 'grid';
+            statusBadge.textContent = 'Fetching links from darogan.wales...';
+            statusBadge.className = 'status-badge status-scanning';
+            
+            allLinks = [];
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(SERVER_URL + '/api/scan', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                allLinks = data.links;
+                updateStats();
+                renderLinks();
+
+                statusBadge.textContent = 'Scan complete!';
+                statusBadge.className = 'status-badge status-complete';
+                document.getElementById('exportBtn').disabled = false;
+                
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                document.getElementById('duration').textContent = `Completed in ${duration}s`;
+
+            } catch (error) {
+                statusBadge.textContent = 'Scan failed: ' + error.message;
+                statusBadge.className = 'status-badge status-error';
+                console.error('Scan error:', error);
+                alert('Scan failed: ' + error.message + '\n\nMake sure the server is running: node link-checker-server.js');
+            } finally {
+                scanBtn.disabled = false;
+            }
+        }
+
+        function updateStats() {
+            const total = allLinks.length;
+            const valid = allLinks.filter(l => l.status === 'ok').length;
+            const broken = allLinks.filter(l => l.status === 'error').length;
+            const oldDomain = allLinks.filter(l => l.isOldDomain).length;
+
+            document.getElementById('totalLinks').textContent = total;
+            document.getElementById('validLinks').textContent = valid;
+            document.getElementById('brokenLinks').textContent = broken;
+            document.getElementById('oldDomainLinks').textContent = oldDomain;
+        }
+
+        function renderLinks() {
+            const listContainer = document.getElementById('linksList');
+            
+            let filtered = allLinks;
+            if (currentFilter === 'ok') {
+                filtered = allLinks.filter(l => l.status === 'ok');
+            } else if (currentFilter === 'error') {
+                filtered = allLinks.filter(l => l.status === 'error');
+            } else if (currentFilter === 'warning') {
+                filtered = allLinks.filter(l => l.isOldDomain);
+            }
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">No links in this category.</div>';
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map(link => {
+                const iconClass = link.status === 'ok' ? 'status-ok-icon' : 
+                                 link.isOldDomain ? 'status-warning-icon' : 'status-error-icon';
+                const icon = link.status === 'ok' ? '✓' : 
+                            link.isOldDomain ? '⚠' : '✗';
+
+                return `
+                    <div class="link-item">
+                        <div class="link-status-icon ${iconClass}">${icon}</div>
+                        <div class="link-details">
+                            <a href="${escapeHtml(link.url)}" target="_blank" class="link-url">${escapeHtml(link.url)}</a>
+                            <div class="link-meta">${escapeHtml(link.statusText)} ${link.statusCode ? `(${link.statusCode})` : ''}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterLinks(filter) {
+            currentFilter = filter;
+            
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            renderLinks();
+        }
+
+        function exportResults() {
+            if (allLinks.length === 0) {
+                alert('No results to export. Run a scan first.');
+                return;
+            }
+
+            let csv = 'URL,Status,Status Code,Status Text,Old Domain,Internal\n';
+            allLinks.forEach(link => {
+                const status = link.status === 'ok' ? 'Valid' : link.isOldDomain ? 'Old Domain' : 'Broken';
+                const url = (link.url || '').replace(/"/g, '""');
+                const statusText = (link.statusText || '').replace(/"/g, '""');
+                csv += `"${url}","${status}","${link.statusCode || 'N/A'}","${statusText}","${link.isOldDomain ? 'Yes' : 'No'}","${link.isInternal ? 'Yes' : 'No'}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const urlObj = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = urlObj;
+            a.download = `darogan-links-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(urlObj);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
