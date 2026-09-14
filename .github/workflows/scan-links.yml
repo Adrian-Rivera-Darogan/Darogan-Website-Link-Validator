@@ -1,0 +1,32 @@
+name: Scan Darogan Links
+
+on:
+  workflow_dispatch: {}   # lets you click "Run workflow" manually on GitHub
+  schedule:
+    - cron: '0 6 * * 1'   # runs every Monday at 6am UTC (optional, remove if you don't want scheduled runs)
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run link scan
+        run: node scan.js
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results.json
+          git diff --staged --quiet || git commit -m "Update link scan results [skip ci]"
+          git push
